@@ -1,0 +1,17 @@
+---
+- name: Ensure locales package is installed (Ubuntu/Debian)
+  apt:
+    name: locales
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure the locale exists (Ubuntu/Debian)
+  locale_gen:
+    name: "{{ host_preparation_default_locale }}"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Set default locale (Debian/Ubuntu without systemd)
+  command: "update-locale LANG={{ host_preparation_default_locale }}"
+  when: ansible_os_family == 'Debian'
+

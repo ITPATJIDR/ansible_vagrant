@@ -1,0 +1,23 @@
+# Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.provider "docker" do |d|
+    # Build from our Dockerfile instead of pulling an image
+    d.build_dir = "."
+    
+    # Enable SSH
+    d.has_ssh = true
+    
+    # Expose SSH port (optional, for direct SSH access)
+    d.ports = ["2222:22"]
+
+    # Expose Nginx port 
+    d.ports = ["8080:80"]
+
+    # Expose 9000 port 
+    d.ports = ["9000:9000"]
+  end
+
+  # Configure SSH settings
+  config.ssh.username = "vagrant"
+  config.ssh.password = "vagrant"
+end
