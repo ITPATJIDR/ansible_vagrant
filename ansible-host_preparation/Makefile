@@ -9,7 +9,11 @@ check:
 	ansible --version
 
 	@echo "Setting up ansible.cfg..."
-	echo '[defaults]\nroles_path=../' > ansible.cfg
+	echo '[defaults]' > ansible.cfg
+	echo 'roles_path=../' >> ansible.cfg
+	echo 'host_key_checking = False' >> ansible.cfg
+	echo 'inventory = inventory' >> ansible.cfg
+	echo 'remote_user = vagrant' >> ansible.cfg
 
 check_syntax:
 	@echo "Running syntax check..."

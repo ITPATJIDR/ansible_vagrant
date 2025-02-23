@@ -33,6 +33,8 @@ host_preparation_base_packages:
   - sysstat
   - iftop
   - nginx  # Added Nginx
+  - netcat
+  - net-tools
 host_preparation_base_packages_ubuntu:
   - "{{ 'python3-apt' if ansible_python.version.major == 3 else 'python-apt' }}"
   - aptitude

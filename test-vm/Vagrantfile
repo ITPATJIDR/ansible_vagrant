@@ -13,8 +13,9 @@ Vagrant.configure("2") do |config|
     # Expose Nginx port 
     d.ports = ["8080:80"]
 
-    # Expose 9000 port 
-    d.ports = ["9000:9000"]
+    # Expose Nginx port 
+    d.ports = ["4444:4444"]
+
   end
 
   # Configure SSH settings
