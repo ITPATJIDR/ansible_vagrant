@@ -33,20 +33,37 @@
           })] }}"
       loop: "{{ csv_data.list }}"
 
-    - name: Display processed data by dst_ip and TCP
-      debug:
-        msg: "{{ formatted_output }}"
-      vars:
-        formatted_output: |
+
+    - name: Build array with Jinja2
+      set_fact:
+        ip_port_array: |
+          [
           {% for item in processed_data %}
             {% for x in item.src_ip %}
               {% for y in item.dst_ip %}
                 {% for z in item.TCP %}
-                  SRC_IP : {{ x }} DST_IP: {{ y }} PORT: {{  z }}
+                  "[{{ x }},{{ y }},{{ z[0] }}]",
                 {% endfor %}
               {% endfor %}
             {% endfor %}
           {% endfor %}
+          ]
+
+    - name: Display the resulting array
+      debug:
+        msg: "{{ ip_port_array }}"
+
+    - name: Convert strings to array of dictionaries
+      set_fact:
+        parsed_array: |
+          {% for item in ip_port_array %}
+            {% set values = item | regex_replace('\\[(.*)\\]', '\\1') | split(',') %}
+            {{ {'SRC_IP': values[0], 'DST_IP': values[1], 'PORT': values[2]} }},
+          {% endfor %}
+
+    - name: Display the parsed array
+      debug:
+        msg: "{{ parsed_array }}"
 
 
 

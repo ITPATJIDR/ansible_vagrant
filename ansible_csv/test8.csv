@@ -1,0 +1,7 @@
+#,SRC,ZONE,Search Key,Use Interface,SRC IP,DST,ZONE,Search Key,Use Interface,DST IP,TCP,UDP,ICMP,Objective,Remark
+Management and Operation,,,,,,,,,,,,,,,
+System to system,,,,,,,,,,,,,,,
+ne-to-ne,,,,,,,,,,,,,,,
+,Bastion host,ne,Bastion host-ne,MGMT_IP,"10.94.221.66,
+10.94.221.66,",Registry host,ne,Registry host-ne,MGMT_IP,"127.0.0.1,
+127.0.0.1,",4444,,TRUE,,
