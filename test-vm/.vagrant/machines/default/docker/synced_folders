@@ -1,1 +1,1 @@
-{"docker":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/home/itpat/Code/Opsta/ansible_vagrant/test-vm","disabled":false,"__vagrantfile":true}}}
+{"docker":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/Users/itpat/Code/Opsta/ansible_lab/test-vm","disabled":false,"__vagrantfile":true}}}

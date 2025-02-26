@@ -34,5 +34,5 @@ EXPOSE 22
 # Expose Nginx port
 EXPOSE 80
 
-# Expose Nginx port
-EXPOSE 4444
+# # Expose Nginx port
+# EXPOSE 4444
