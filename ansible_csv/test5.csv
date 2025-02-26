@@ -1,0 +1,107 @@
+lookup name,zone,svc ip iface,mgmt ip iface
+bastion host-ne,ne,10.94.154.66,10.94.221.66
+haproxy servers-ne,ne,"10.94.154.64,
+10.94.154.65,
+<haproxy_vip_ne x2>","10.94.221.64,
+10.94.221.65"
+rancher servers-ne,ne,10.94.154.49,10.94.221.49
+bastion host-se,se,10.95.163.66,10.95.242.66
+registry host-ne,ne,10.94.154.44,10.94.221.44
+Rancher server-ne,ne,10.94.154.49,10.94.221.49
+HAProxy server-ne,ne,"10.94.154.64,
+10.94.154.65,
+<haproxy_vip_ne x2>","10.94.221.64,
+10.94.221.65"
+All k8s master nodes-ne,ne,"10.94.154.61,
+10.94.154.62,
+10.94.154.63","10.94.221.61,
+10.94.221.62,
+10.94.221.63"
+All k8s worker nodes-ne,ne,"10.94.154.71,
+10.94.154.72,
+10.94.154.73,
+10.94.154.74,
+10.94.154.75,
+10.94.154.76","10.94.221.71,
+10.94.221.72,
+10.94.221.73,
+10.94.221.74,
+10.94.221.75,
+10.94.221.76"
+All observability system nodes-ne,ne,"10.94.154.45,
+10.94.154.46,
+10.94.154.47,
+10.94.154.48","10.94.221.45,
+10.94.221.46,
+10.94.221.47,
+10.94.221.48"
+HAProxy server-se,se,"10.95.163.65,
+10.95.163.70,
+<haproxy_vip_se x2>","10.95.242.65,
+<haproxy#02_mgmt_ip>"
+All k8s master nodes-se,se,"10.95.163.61,
+10.95.163.62,
+10.95.163.63","10.95.242.61,
+10.95.242.62,
+10.95.242.63"
+All k8s worker nodes-se,se,"10.95.163.71,
+10.95.163.72,
+10.95.163.73,
+10.95.163.74,
+10.95.163.75,
+10.95.163.76,
+10.95.163.77,
+10.95.163.78,
+10.95.163.79,
+10.95.163.80,
+10.95.163.81,
+10.95.163.82","10.95.242.71,
+10.95.242.72,
+10.95.242.73,
+10.95.242.74,
+10.95.242.75,
+10.95.242.76,
+10.95.242.77,
+10.95.242.78,
+10.95.242.79,
+10.95.242.80,
+10.95.242.81,
+10.95.242.82"
+vpn network-,n/a,<unknown_ip>,<unknown_ip>
+infra admin network-,n/a,<unknown_ip>,<unknown_ip>
+bld admin network-,n/a,<unknown_ip>,"10.94.221.41,
+10.94.221.42,
+10.94.221.43"
+Postgres Server-ne,ne,"10.94.154.41,
+10.94.154.42,
+10.94.154.43,
+10.94.154.40",
+Postgres Server-se,se,<unknown_ip>,<unknown_ip>
+bde admin network-,n/a,<unknown_ip>,<unknown_ip>
+Kafka server-ne,ne,"10.94.154.1,
+10.94.154.2,
+10.94.154.3,
+10.94.154.4,
+10.94.154.5","10.94.221.1,
+10.94.221.2,
+10.94.221.3,
+10.94.221.4,
+10.94.221.5"
+Kafka server-se,se,<unknown_ip>,<unknown_ip>
+proxy server-,n/a,<unknown_ip>,<unknown_ip>
+DNS servers-,n/a,<unknown_ip>,<unknown_ip>
+NTP servers-,n/a,<unknown_ip>,<unknown_ip>
+"required service that bde needed to communicate 
+to VM ware (db-metastore) and Kafka server-",n/a,<unknown_ip>,<unknown_ip>
+dtac ingress ne,ne,dtac_vip_haproxy_ne,n/a
+true ingress ne,ne,true_vip_haproxy_ne,n/a
+dtac ingress se,se,dtac_vip_haproxy_se,n/a
+true ingress se,se,true_vip_haproxy_se,n/a
+dtac ingress ne dev,ne,dtac_vip_haproxy_ne,n/a
+true ingress ne dev,ne,true_vip_haproxy_ne,n/a
+dtac ingress se dev,se,dtac_vip_haproxy_se,n/a
+true ingress se dev,se,true_vip_haproxy_se,n/a
+dtac ingress ne cloud,ne,dtac_vip_haproxy_ne,n/a
+true ingress ne cloud,ne,true_vip_haproxy_ne,n/a
+dtac ingress se cloud,se,dtac_vip_haproxy_se,n/a
+true ingress se cloud,se,true_vip_haproxy_se,n/a

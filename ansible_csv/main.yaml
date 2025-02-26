@@ -1,0 +1,62 @@
+---
+- name: Read and Process CSV File on Localhost
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    csv_file_path: "test7.csv"  # Update this to your actual CSV file path
+
+  tasks:
+    - name: Check if CSV file exists
+      stat:
+        path: "{{ csv_file_path }}"
+      register: csv_file_stat
+
+    - name: Fail if CSV file doesn't exist
+      fail:
+        msg: "CSV file not found at {{ csv_file_path }}"
+      when: not csv_file_stat.stat.exists
+
+    - name: Read CSV file
+      community.general.read_csv:
+        path: "{{ csv_file_path }}"
+        delimiter: ","
+      register: csv_data
+
+    - name: Convert IP string and Port string to lists
+      set_fact:
+        processed_data: "{{ processed_data | default([]) + 
+          [item | combine({
+            'dst_ip': (item['dst_ip'] | default('')).split(',') | map('trim') | list,
+            'src_ip': (item['src_ip'] | default('')).split(',') | map('trim') | list,
+            'TCP': item['TCP'] | default('') | split(', ') | map('split', '/') | list
+          })] }}"
+      loop: "{{ csv_data.list }}"
+
+    - name: Display processed data by dst_ip and TCP
+      debug:
+        msg: "{{ formatted_output }}"
+      vars:
+        formatted_output: |
+          {% for item in processed_data %}
+            {% for x in item.src_ip %}
+              {% for y in item.dst_ip %}
+                {% for z in item.TCP %}
+                  SRC_IP : {{ x }} DST_IP: {{ y }} PORT: {{  z }}
+                {% endfor %}
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+  
+
