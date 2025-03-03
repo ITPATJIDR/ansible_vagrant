@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars:
-    csv_file_path: "test7.csv"  # Update this to your actual CSV file path
+    csv_file_path: "test9.csv"  # Update this to your actual CSV file path
 
   tasks:
     - name: Check if CSV file exists
@@ -27,53 +27,26 @@
       set_fact:
         processed_data: "{{ processed_data | default([]) + 
           [item | combine({
-            'dst_ip': (item['dst_ip'] | default('')).split(',') | map('trim') | list,
-            'src_ip': (item['src_ip'] | default('')).split(',') | map('trim') | list,
+            'dst_ip': (item['DST_IP'] | default('')).split(',') | map('trim') | list,
+            'src_ip': (item['SRC_IP'] | default('')).split(',') | map('trim') | list,
             'TCP': item['TCP'] | default('') | split(', ') | map('split', '/') | list
           })] }}"
       loop: "{{ csv_data.list }}"
 
 
-    - name: Build array with Jinja2
-      set_fact:
-        ip_port_array: |
-          [
-          {% for item in processed_data %}
-            {% for x in item.src_ip %}
-              {% for y in item.dst_ip %}
-                {% for z in item.TCP %}
-                  "[{{ x }},{{ y }},{{ z[0] }}]",
-                {% endfor %}
-              {% endfor %}
-            {% endfor %}
-          {% endfor %}
-          ]
-
-    - name: Display the resulting array
+    - name: Display the resulting array with nested source IP loop
       debug:
-        msg: "{{ ip_port_array }}"
+        msg: "{{ processed_data }}"
 
-    - name: Convert strings to array of dictionaries
-      set_fact:
-        parsed_array: |
-          {% for item in ip_port_array %}
-            {% set values = item | regex_replace('\\[(.*)\\]', '\\1') | split(',') %}
-            {{ {'SRC_IP': values[0], 'DST_IP': values[1], 'PORT': values[2]} }},
-          {% endfor %}
-
-    - name: Display the parsed array
+    - name: Display nested loop over src_ip, dst_ip, and TCP
       debug:
-        msg: "{{ parsed_array }}"
+        msg: "Source IP: {{ item[0] }}, Destination IP: {{ item[1] }}, TCP Port: {{ item[2] }}"
+      with_nested:
+        - "{{ processed_data[0].src_ip }}"
+        - "{{ processed_data[0].dst_ip }}"
+        - "{{ processed_data[0].TCP | flatten }}"
+      
 
 
 
-
-
-
-
-
-
-
-
-  
 
