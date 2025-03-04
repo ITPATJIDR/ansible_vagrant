@@ -29,23 +29,67 @@
           [item | combine({
             'dst_ip': (item['DST_IP'] | default('')).split(',') | map('trim') | list,
             'src_ip': (item['SRC_IP'] | default('')).split(',') | map('trim') | list,
-            'TCP': item['TCP'] | default('') | split(', ') | map('split', '/') | list
+            'TCP':    (item['TCP'] | default('')).split(',') | map('trim') | list,
           })] }}"
       loop: "{{ csv_data.list }}"
+      when: item['DST_IP'] != '' or item['SRC_IP'] != '' or item['TCP'] != ''
 
 
-    - name: Display the resulting array with nested source IP loop
-      debug:
-        msg: "{{ processed_data }}"
-
-    - name: Display nested loop over src_ip, dst_ip, and TCP
-      debug:
-        msg: "Source IP: {{ item[0] }}, Destination IP: {{ item[1] }}, TCP Port: {{ item[2] }}"
+    # Alternative version using individual loops if you need to process each IP/port separately
+    - name: Display detailed information with separate loops
+      set_fact:
+        ip_port_combinations: "{{ ip_port_combinations | default([]) + [
+          [item.0.src_ip[item.1], item.0.dst_ip[item.2], item.0.TCP[item.3]]
+        ] }}"
       with_nested:
-        - "{{ processed_data[0].src_ip }}"
-        - "{{ processed_data[0].dst_ip }}"
-        - "{{ processed_data[0].TCP | flatten }}"
-      
+        - "{{ processed_data }}"
+        - "{{ range(0, processed_data | map(attribute='src_ip') | map('length') | max) }}"
+        - "{{ range(0, processed_data | map(attribute='dst_ip') | map('length') | max) }}"
+        - "{{ range(0, processed_data | map(attribute='TCP') | map('length') | max) }}"
+      when: 
+        - item.0.src_ip | length > item.1
+        - item.0.dst_ip | length > item.2
+        - item.0.TCP | length > item.3
+
+    - name: Display the combinations
+      debug:
+        var: ip_port_combinations
+
+    - name: Add clients to inventory
+      add_host:
+        name: "{{ item }}"
+        groups: clients
+        ansible_host: "{{ item }}"
+      loop: "{{ ip_port_combinations | map(attribute=0) | unique | list }}"
+      when: item not in (groups['clients'] | default([]))
+
+    - name: Add servers to inventory
+      add_host:
+        name: "{{ item }}"
+        groups: servers
+        ansible_host: "{{ item }}"
+      loop: "{{ ip_port_combinations | map(attribute=1) | unique | list }}"
+      when: item not in (groups['servers'] | default([]))
+
+    - name: Display list of hosts in client and server groups
+      debug:
+        msg: 
+          - "Clients: {{ groups['clients'] | default([]) }}"
+          - "Servers: {{ groups['servers'] | default([]) }}"
+
+    - name: Ping all clients
+      ping:
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['clients'] | default([]) }}"
+      ignore_errors: yes
+
+    - name: Ping all servers
+      ping:
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['servers'] | default([]) }}"
+      ignore_errors: yes
+
+           
 
 
 

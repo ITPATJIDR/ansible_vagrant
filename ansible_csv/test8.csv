@@ -1,4 +1,4 @@
-#,SRC,ZONE,Search Key,Use Interface,SRC IP,DST,ZONE,Search Key,Use Interface,DST IP,TCP,UDP,ICMP,Objective,Remark
+#,SRC,ZONE,Search Key,Use Interface,SRC_IP,DST,ZONE,Search Key,Use Interface,DST_IP,TCP,UDP,ICMP,Objective,Remark
 Management and Operation,,,,,,,,,,,,,,,
 System to system,,,,,,,,,,,,,,,
 ne-to-ne,,,,,,,,,,,,,,,
