@@ -1,0 +1,20 @@
+---
+- name: Start Netcat server on port 4444
+  hosts: server
+  tasks:
+    - name: Start Netcat listening on port 4444
+      ansible.builtin.shell: "nohup nc -l -p 4444 &"
+      async: 10
+      poll: 0
+
+- name: Check if port 4444 is open from client
+  hosts: client
+  tasks:
+    - name: Verify connection to server on port 4444
+      ansible.builtin.shell: "nc -zu 127.0.0.1 4444 && echo 'Port is open' || echo 'Port is closed'"
+      register: result
+
+    - name: Display the result
+      ansible.builtin.debug:
+        msg: "{{ result.stdout }}"
+

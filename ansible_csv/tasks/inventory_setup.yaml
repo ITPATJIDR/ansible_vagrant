@@ -1,0 +1,33 @@
+---
+- name: Display detailed information with separate loops
+  set_fact:
+    ip_port_combinations: "{{ ip_port_combinations | default([]) + [
+      [item.0.src_ip[item.1], item.0.dst_ip[item.2], item.0.TCP[item.3]]
+    ] }}"
+  with_nested:
+    - "{{ processed_data }}"
+    - "{{ range(0, processed_data | map(attribute='src_ip') | map('length') | max) }}"
+    - "{{ range(0, processed_data | map(attribute='dst_ip') | map('length') | max) }}"
+    - "{{ range(0, processed_data | map(attribute='TCP') | map('length') | max) }}"
+  when: 
+    - item.0.src_ip | length > item.1
+    - item.0.dst_ip | length > item.2
+    - item.0.TCP | length > item.3
+
+- name: Add clients to inventory
+  add_host:
+    name: "{{ item[0] }}_{{ item[2] }}"
+    groups: clients
+    ansible_host: "{{ item[0] }}"
+    ansible_port: "{{ item[2] }}"
+  loop: "{{ ip_port_combinations }}"
+  when: (item[0] ~ '_' ~ item[2]) not in (groups['clients'] | default([]))
+
+- name: Add server to inventory
+  add_host:
+    name: "{{ item[1] }}_{{ item[2] }}"
+    groups: server
+    ansible_host: "{{ item[1] }}"
+    ansible_port: "{{ item[2] }}"
+  loop: "{{ ip_port_combinations }}"
+  when: (item[1] ~ '_' ~ item[2]) not in (groups['servers'] | default([]))

@@ -1,0 +1,11 @@
+---
+- name: Create test file
+  file:
+    path: "/tmp/test.txt"
+    state: touch
+    mode: '0644'
+  
+- name: Add content to file
+  copy:
+    content: "Hello from Ansible!\n"
+    dest: "/tmp/test.txt"

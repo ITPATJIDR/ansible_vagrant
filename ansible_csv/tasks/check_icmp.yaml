@@ -1,0 +1,10 @@
+- name: Check connectivity by pinging the server from the client
+  hosts: client
+  tasks:
+    - name: Ping the server
+      ansible.builtin.ping:
+      register: ping_result
+
+    - name: Display the ping result
+      ansible.builtin.debug:
+        msg: "{{ ping_result }}"

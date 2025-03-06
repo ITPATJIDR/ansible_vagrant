@@ -1,96 +1,37 @@
 ---
-- name: Read and Process CSV File on Localhost
+- name: Process CSV and Connect to Clients
   hosts: localhost
   connection: local
   gather_facts: false
   vars:
-    csv_file_path: "test9.csv"  # Update this to your actual CSV file path
+    csv_file_path: "test9.csv"
 
   tasks:
-    - name: Check if CSV file exists
-      stat:
-        path: "{{ csv_file_path }}"
-      register: csv_file_stat
+    - name: Import CSV processing tasks
+      import_tasks: tasks/read_csv.yaml
 
-    - name: Fail if CSV file doesn't exist
-      fail:
-        msg: "CSV file not found at {{ csv_file_path }}"
-      when: not csv_file_stat.stat.exists
+    - name: Import inventory setup tasks
+      import_tasks: tasks/inventory_setup.yaml
 
-    - name: Read CSV file
-      community.general.read_csv:
-        path: "{{ csv_file_path }}"
-        delimiter: ","
-      register: csv_data
+- name: Execute Ansible Tasks
+  gather_facts: no
+  tasks:
+    - name: Import tasks from tasks/main.yaml
+      import_tasks: tasks/main.yaml
+      
+# TODO
+# 1 protocol layer 4 and layer 7
+# test layer 4 and layer 7
+# ICMP TESTING่่ ( ping command )
+# source ip specify ว่ามาจาก ไหน
+# fix hard code to variable 
+# fix output to easy to read 
+# check / /http /https 
 
-    - name: Convert IP string and Port string to lists
-      set_fact:
-        processed_data: "{{ processed_data | default([]) + 
-          [item | combine({
-            'dst_ip': (item['DST_IP'] | default('')).split(',') | map('trim') | list,
-            'src_ip': (item['SRC_IP'] | default('')).split(',') | map('trim') | list,
-            'TCP':    (item['TCP'] | default('')).split(',') | map('trim') | list,
-          })] }}"
-      loop: "{{ csv_data.list }}"
-      when: item['DST_IP'] != '' or item['SRC_IP'] != '' or item['TCP'] != ''
+# friday 
 
 
-    # Alternative version using individual loops if you need to process each IP/port separately
-    - name: Display detailed information with separate loops
-      set_fact:
-        ip_port_combinations: "{{ ip_port_combinations | default([]) + [
-          [item.0.src_ip[item.1], item.0.dst_ip[item.2], item.0.TCP[item.3]]
-        ] }}"
-      with_nested:
-        - "{{ processed_data }}"
-        - "{{ range(0, processed_data | map(attribute='src_ip') | map('length') | max) }}"
-        - "{{ range(0, processed_data | map(attribute='dst_ip') | map('length') | max) }}"
-        - "{{ range(0, processed_data | map(attribute='TCP') | map('length') | max) }}"
-      when: 
-        - item.0.src_ip | length > item.1
-        - item.0.dst_ip | length > item.2
-        - item.0.TCP | length > item.3
-
-    - name: Display the combinations
-      debug:
-        var: ip_port_combinations
-
-    - name: Add clients to inventory
-      add_host:
-        name: "{{ item }}"
-        groups: clients
-        ansible_host: "{{ item }}"
-      loop: "{{ ip_port_combinations | map(attribute=0) | unique | list }}"
-      when: item not in (groups['clients'] | default([]))
-
-    - name: Add servers to inventory
-      add_host:
-        name: "{{ item }}"
-        groups: servers
-        ansible_host: "{{ item }}"
-      loop: "{{ ip_port_combinations | map(attribute=1) | unique | list }}"
-      when: item not in (groups['servers'] | default([]))
-
-    - name: Display list of hosts in client and server groups
-      debug:
-        msg: 
-          - "Clients: {{ groups['clients'] | default([]) }}"
-          - "Servers: {{ groups['servers'] | default([]) }}"
-
-    - name: Ping all clients
-      ping:
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['clients'] | default([]) }}"
-      ignore_errors: yes
-
-    - name: Ping all servers
-      ping:
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['servers'] | default([]) }}"
-      ignore_errors: yes
-
-           
-
-
-
-
+# step
+# read_csv -> set inventory -> Server netcat listen -> Client -> TCP
+                                                            # -> UDP
+                                                            # -> ICMP
