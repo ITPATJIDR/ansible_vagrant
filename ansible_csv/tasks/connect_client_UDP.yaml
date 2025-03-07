@@ -1,0 +1,56 @@
+---
+- name: Filter for UDP clients only
+  ansible.builtin.set_fact:
+    is_client: "{{ 'client' in inventory_hostname }}"
+  when: "'dst_ip' in hostvars[inventory_hostname]"
+
+- name: Debug UDP client details
+  debug:
+    msg: |
+      Client Host: {{ inventory_hostname }}
+      Source IP: {{ ansible_host }}
+      Destination IP: {{ dst_ip }}
+      UDP Port: {{ udp_port | default('not set') }}
+      Groups: {{ group_names }}
+  when: is_client | bool
+
+- name: Check if dst_ip is defined
+  ansible.builtin.assert:
+    that:
+      - "dst_ip is defined"
+    fail_msg: "dst_ip is not defined for host {{ inventory_hostname }}"
+    quiet: true
+  when: is_client | bool
+
+- name: Skip if udp_port is not defined
+  set_fact:
+    skip_udp_test: "{{ udp_port is not defined }}"
+  when: is_client | bool
+
+- name: Run nc -z to test connectivity to dst_ip on udp_port
+  ansible.builtin.command:
+    cmd: "nc -z -u -v {{ dst_ip }} {{ udp_port }}"
+  register: nc_result
+  failed_when: false  # Allow the task to continue even if connectivity fails
+  when: is_client | bool and not (skip_udp_test | default(false))
+
+- name: Set test timestamp
+  ansible.builtin.set_fact:
+    test_timestamp: "{{ ansible_date_time.iso8601 | default('') }}"
+  when: is_client | bool
+
+- name: Display nc -z result
+  debug:
+    msg: |
+      UDP Connectivity test from {{ inventory_hostname }} to {{ dst_ip }}:{{ udp_port }}:
+      Status: {{ 'Success' if nc_result.rc == 0 else 'Failed' }}
+      Exit Code: {{ nc_result.rc }}
+      Source: {{ src_name | default(inventory_hostname) }} ({{ ansible_host }})
+      Destination: {{ dst_name | default('unknown') }} ({{ dst_ip }})
+      Port: {{ udp_port }}
+      Command: nc -z -u -v {{ dst_ip }} {{ udp_port }}
+      Timestamp: {{ test_timestamp }}
+      Output: {{ nc_result.stdout_lines | default(['No output']) | to_nice_json }}
+      Error (if any): {{ nc_result.stderr_lines | default(['No error']) | to_nice_json }}
+    verbosity: 0
+  when: is_client | bool

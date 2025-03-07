@@ -1,33 +1,144 @@
 ---
-- name: Display detailed information with separate loops
+- name: Initialize protocol-specific arrays
   set_fact:
-    ip_port_combinations: "{{ ip_port_combinations | default([]) + [
-      [item.0.src_ip[item.1], item.0.dst_ip[item.2], item.0.TCP[item.3]]
-    ] }}"
+    TCP: []
+    UDP: []
+    ICMP: []
+
+- name: Generate TCP entries
+  set_fact:
+    TCP: "{{ TCP + [{'SRC': item.0.SRC_Search_Key, 'DST': item.0.DST_Search_Key, 'src_ip': item.0.src_ip[item.1], 'dst_ip': item.0.dst_ip[item.2], 'TCP_port': item.0.TCP[item.3]}] }}"
   with_nested:
     - "{{ processed_data }}"
     - "{{ range(0, processed_data | map(attribute='src_ip') | map('length') | max) }}"
     - "{{ range(0, processed_data | map(attribute='dst_ip') | map('length') | max) }}"
     - "{{ range(0, processed_data | map(attribute='TCP') | map('length') | max) }}"
-  when: 
-    - item.0.src_ip | length > item.1
-    - item.0.dst_ip | length > item.2
-    - item.0.TCP | length > item.3
+  when:
+    - item.0.src_ip is defined and item.0.src_ip | length > item.1
+    - item.0.dst_ip is defined and item.0.dst_ip | length > item.2
+    - item.0.TCP is defined and item.0.TCP | length > item.3
 
-- name: Add clients to inventory
-  add_host:
-    name: "{{ item[0] }}_{{ item[2] }}"
-    groups: clients
-    ansible_host: "{{ item[0] }}"
-    ansible_port: "{{ item[2] }}"
-  loop: "{{ ip_port_combinations }}"
-  when: (item[0] ~ '_' ~ item[2]) not in (groups['clients'] | default([]))
+- name: Generate UDP entries
+  set_fact:
+    UDP: "{{ UDP + [{'SRC': item.0.SRC_Search_Key, 'DST': item.0.DST_Search_Key, 'src_ip': item.0.src_ip[item.1], 'dst_ip': item.0.dst_ip[item.2], 'UDP_port': item.0.UDP[item.3]}] }}"
+  with_nested:
+    - "{{ processed_data }}"
+    - "{{ range(0, processed_data | map(attribute='src_ip') | map('length') | max) }}"
+    - "{{ range(0, processed_data | map(attribute='dst_ip') | map('length') | max) }}"
+    - "{{ range(0, processed_data | map(attribute='UDP') | map('length') | max) }}"
+  when:
+    - item.0.src_ip is defined and item.0.src_ip | length > item.1
+    - item.0.dst_ip is defined and item.0.dst_ip | length > item.2
+    - item.0.UDP is defined and item.0.UDP | length > item.3
 
-- name: Add server to inventory
+- name: Generate ICMP entries
+  set_fact:
+    ICMP: "{{ ICMP + [{'SRC': item.0.SRC_Search_Key, 'DST': item.0.DST_Search_Key, 'src_ip': item.0.src_ip[item.1], 'dst_ip': item.0.dst_ip[item.2], 'ICMP': item.0.ICMP[item.3]}] }}"
+  with_nested:
+    - "{{ processed_data }}"
+    - "{{ range(0, processed_data | map(attribute='src_ip') | map('length') | max) }}"
+    - "{{ range(0, processed_data | map(attribute='dst_ip') | map('length') | max) }}"
+    - "{{ range(0, processed_data | map(attribute='ICMP') | map('length') | max) }}"
+  when:
+    - item.0.src_ip is defined and item.0.src_ip | length > item.1
+    - item.0.dst_ip is defined and item.0.dst_ip | length > item.2
+    - item.0.ICMP is defined and item.0.ICMP | length > item.3
+    - item.0.ICMP[item.3] | string == "TRUE"
+
+- name: Debug - Print TCP array
+  debug:
+    var: TCP
+    verbosity: 0
+
+- name: Debug - Print UDP array
+  debug:
+    var: UDP
+    verbosity: 0
+
+- name: Debug - Print ICMP array
+  debug:
+    var: ICMP
+    verbosity: 0
+
+- name: Add TCP clients to inventory
   add_host:
-    name: "{{ item[1] }}_{{ item[2] }}"
-    groups: server
-    ansible_host: "{{ item[1] }}"
-    ansible_port: "{{ item[2] }}"
-  loop: "{{ ip_port_combinations }}"
-  when: (item[1] ~ '_' ~ item[2]) not in (groups['servers'] | default([]))
+    name: "{{ item.SRC }}_client_{{ item.src_ip }}"
+    groups: "{{ item.SRC }}_{{ item.DST }}_TCP"
+    ansible_host: "{{ item.src_ip }}"
+    ansible_port: 2223
+    ansible_user: "vagrant"
+    ansible_password: "vagrant"
+    dst_ip: "{{ item.dst_ip }}"
+    tcp_port : "{{ item.TCP_port }}"
+    src_name: "{{ item.SRC }}"
+    dst_name: "{{ item.DST }}"
+  loop: "{{ TCP }}"
+
+
+- name: Add UDP clients to inventory
+  add_host:
+    name: "{{ item.SRC }}_client_{{ item.src_ip }}"
+    groups: "{{ item.SRC }}_{{ item.DST }}_UDP"
+    ansible_host: "{{ item.src_ip }}"
+    ansible_port: 2223
+    ansible_user: "vagrant"
+    ansible_password: "vagrant"
+    dst_ip: "{{ item.dst_ip }}"
+    udp_port: "{{ item.UDP_port }}"
+    src_name: "{{ item.SRC }}"
+    dst_name: "{{ item.DST }}"
+  loop: "{{ UDP }}"
+
+- name: Add ICMP clients to inventory
+  add_host:
+    name: "{{ item.SRC }}_client_{{ item.src_ip }}"
+    groups: "{{ item.SRC }}_{{ item.DST }}_ICMP"
+    ansible_host: "{{ item.src_ip }}"
+    ansible_port: 2223
+    ansible_user: "vagrant"
+    ansible_password: "vagrant"
+    dst_ip: "{{ item.dst_ip }}"
+    src_name: "{{ item.SRC }}"
+    dst_name: "{{ item.DST }}"
+  loop: "{{ ICMP }}"
+
+- name: Add TCP servers to inventory
+  add_host:
+    name: "{{ item.DST }}_server_{{ item.dst_ip }}"
+    groups: "{{ item.SRC }}_{{ item.DST }}_TCP_SERVER"
+    ansible_host: "{{ item.dst_ip }}"
+    ansible_port: 2222
+    ansible_user: "vagrant"
+    ansible_password: "vagrant"
+    tcp_port: "{{ item.TCP_port }}"
+    src_name: "{{ item.SRC }}"
+    dst_name: "{{ item.DST }}"
+  loop: "{{ TCP }}"
+
+
+- name: Add UDP servers to inventory
+  add_host:
+    name: "{{ item.DST }}_server_{{ item.dst_ip }}"
+    groups: "{{ item.SRC }}_{{ item.DST }}_UDP_SERVER"
+    ansible_host: "{{ item.dst_ip }}"
+    ansible_port: 2222
+    ansible_user: "vagrant"
+    ansible_password: "vagrant"
+    udp_port: "{{ item.UDP_port }}"
+    src_name: "{{ item.SRC }}"
+    dst_name: "{{ item.DST }}"
+  loop: "{{ UDP }}"
+
+
+- name: Add ICMP servers to inventory
+  add_host:
+    name: "{{ item.DST }}_server_{{ item.dst_ip }}"
+    groups: "{{ item.SRC }}_{{ item.DST }}_ICMP_SERVER"
+    ansible_host: "{{ item.dst_ip }}"
+    ansible_port: 2222
+    ansible_user: "vagrant"
+    ansible_password: "vagrant"
+    dst_ip: "{{ item.dst_ip }}"
+    src_name: "{{ item.SRC }}"
+    dst_name: "{{ item.DST }}"
+  loop: "{{ ICMP }}"

@@ -1,2 +1,0 @@
-#,SRC,zone,search_key,use interface,src_ip,DST,zone,search_key,use interface,dst_ip,TCP,UDP,ICMP,Objective,Remark
-,Bastion host,ne,Bastion host-ne,MGMT_IP,127.0.0.1,Registry host,ne,Registry host-ne,MGMT_IP,127.0.0.1,"4444/http, 22/ssh",,FALSE,,

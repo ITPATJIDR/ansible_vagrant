@@ -1,0 +1,4 @@
+"SRC","src_ip","DST","dst_ip","protocol","port","success","error_msg","timestamp"
+"Bashion_SE","127.0.0.1","All_k8s_worker_nodes_SE","127.0.0.1","TCP","4444","True","","2025-03-07T07:45:56Z"
+"Bashion_SE","127.0.0.1","All_k8s_worker_nodes_SE","127.0.0.1","UDP","8888","False","","2025-03-07T07:45:59Z"
+"Bashion_SE","127.0.0.1","All_k8s_worker_nodes_SE","127.0.0.1","ICMP","","False","",""

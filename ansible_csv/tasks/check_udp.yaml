@@ -1,20 +1,37 @@
 ---
-- name: Start Netcat server on port 4444
-  hosts: server
-  tasks:
-    - name: Start Netcat listening on port 4444
-      ansible.builtin.shell: "nohup nc -l -p 4444 &"
-      async: 10
-      poll: 0
+- name: Debug UDP server details
+  debug:
+    msg: |
+      Host: {{ inventory_hostname }}
+      IP: {{ ansible_host }}
+      Port: {{ ansible_port | default('not set') }}
+      UDP Port: {{ hostvars[inventory_hostname].udp_port | default('not set') }}
+      Groups: {{ group_names }}
+    verbosity: 0
 
-- name: Check if port 4444 is open from client
-  hosts: client
-  tasks:
-    - name: Verify connection to server on port 4444
-      ansible.builtin.shell: "nc -zu 127.0.0.1 4444 && echo 'Port is open' || echo 'Port is closed'"
-      register: result
+- name: Check if udp_port is defined
+  ansible.builtin.assert:
+    that:
+      - "udp_port is defined"
+    fail_msg: "udp_port is not defined for host {{ inventory_hostname }}"
+    quiet: true
 
-    - name: Display the result
-      ansible.builtin.debug:
-        msg: "{{ result.stdout }}"
+- name: Run nc -ulvp on UDP server port
+  ansible.builtin.command:
+    cmd: "nc -ulvp {{ udp_port }} &"
+  async: 3600  # Allow the command to run for up to 1 hour
+  poll: 0      # Run in the background without waiting for completion
+  register: nc_result
+  failed_when: false
 
+- name: Debug UDP server setup results
+  debug:
+    msg: |
+      UDP Server Setup Results:
+      Host: {{ inventory_hostname | default('unknown') }}
+      IP: {{ ansible_host | default('unknown') }}
+      UDP Port: {{ udp_port | default('unknown') }}
+      Command: nc -ulvp {{ udp_port }}
+      Status: {{ 'Success' if nc_result.ansible_job_id is defined else 'Failed' }}
+      Job ID: {{ nc_result.ansible_job_id | default('Not available') }}
+    verbosity: 1

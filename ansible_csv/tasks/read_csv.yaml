@@ -22,6 +22,12 @@
         'dst_ip': (item['DST_IP'] | default('')).split(',') | map('trim') | list,
         'src_ip': (item['SRC_IP'] | default('')).split(',') | map('trim') | list,
         'TCP':    (item['TCP'] | default('')).split(',') | map('trim') | list,
+        'UDP':    (item['UDP'] | default('')).split(',') | map('trim') | list,
+        'ICMP':    (item['ICMP'] | default('')).split(',') | map('trim') | list,
       })] }}"
   loop: "{{ csv_data.list }}"
-  when: item['DST_IP'] != '' or item['SRC_IP'] != '' or item['TCP'] != ''
+  when: item['DST_IP'] != '' or item['SRC_IP'] != '' 
+
+- name: debug Processed_data
+  debug:
+    msg: "{{ processed_data }}"

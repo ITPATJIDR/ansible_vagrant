@@ -1,9 +1,8 @@
-#,SRC,ZONE,Search Key,Use Interface,SRC_IP,DST,ZONE,Search Key,Use Interface,DST_IP,TCP,UDP,ICMP,Objective,Remark
+#,SRC,ZONE,SRC_Search_Key,Use Interface,SRC_IP,DST,ZONE,DST_Search_Key,Use Interface,DST_IP,TCP,UDP,ICMP,Objective,Remark
 Management and Operation,,,,,,,,,,,,,,,
 System to system,,,,,,,,,,,,,,,
 ne-to-ne,,,,,,,,,,,,,,,
-,All k8s master nodes,SE,All k8s master nodes-SE,mgmt_ip,127.0.0.1,All k8s worker nodes,SE,All k8s worker nodes-SE,svc_ip,10.95.163.71,"2222/http,
-2223/https",,TRUE,,
-,All k8s master nodes,SE,All k8s master nodes-SE,mgmt_ip,127.0.0.1,All k8s worker nodes,SE,All k8s worker nodes-SE,svc_ip,"10.95.163.71,
-10.95.163.72","2222/http,
-2223/https",,TRUE,,
+,Bashion,SE,Bashion_SE,mgmt_ip,127.0.0.1,All_k8s_worker_nodes,SE,All_k8s_worker_nodes_SE,svc_ip,127.0.0.1,4444,8888,TRUE,,
+,Bashion,NE,Bashion_NE,mgmt_ip,127.0.0.1,Registery,NE,Registery_NE,svc_ip,"127.0.0.4,
+127.0.0.5","4444,
+3244","8092, 3213",FALSE,,
