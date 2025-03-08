@@ -17,6 +17,7 @@
     - item.0.src_ip is defined and item.0.src_ip | length > item.1
     - item.0.dst_ip is defined and item.0.dst_ip | length > item.2
     - item.0.TCP is defined and item.0.TCP | length > item.3
+    - item.0.TCP[item.3] | trim != ''
 
 - name: Generate UDP entries
   set_fact:
@@ -30,6 +31,7 @@
     - item.0.src_ip is defined and item.0.src_ip | length > item.1
     - item.0.dst_ip is defined and item.0.dst_ip | length > item.2
     - item.0.UDP is defined and item.0.UDP | length > item.3
+    - item.0.UDP[item.3] | trim != ''
 
 - name: Generate ICMP entries
   set_fact:
@@ -62,7 +64,7 @@
 
 - name: Add TCP clients to inventory
   add_host:
-    name: "{{ item.SRC }}_client_{{ item.src_ip }}"
+    name: "{{ item.SRC }}_client_{{ item.src_ip }}_{{ item.dst_ip }}_{{ item.TCP_port }}"
     groups: "{{ item.SRC }}_{{ item.DST }}_TCP"
     ansible_host: "{{ item.src_ip }}"
     ansible_port: 2223
@@ -77,7 +79,7 @@
 
 - name: Add UDP clients to inventory
   add_host:
-    name: "{{ item.SRC }}_client_{{ item.src_ip }}"
+    name: "{{ item.SRC }}_client_{{ item.src_ip }}_{{ item.dst_ip }}_{{ item.UDP_port }}"
     groups: "{{ item.SRC }}_{{ item.DST }}_UDP"
     ansible_host: "{{ item.src_ip }}"
     ansible_port: 2223
@@ -91,7 +93,7 @@
 
 - name: Add ICMP clients to inventory
   add_host:
-    name: "{{ item.SRC }}_client_{{ item.src_ip }}"
+    name: "{{ item.SRC }}_client_{{ item.src_ip }}_{{ item.dst_ip }}_ICMP"
     groups: "{{ item.SRC }}_{{ item.DST }}_ICMP"
     ansible_host: "{{ item.src_ip }}"
     ansible_port: 2223

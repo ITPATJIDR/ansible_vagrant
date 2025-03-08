@@ -1,4 +1,6 @@
 "SRC","src_ip","DST","dst_ip","protocol","port","success","error_msg","timestamp"
-"Bashion_SE","127.0.0.1","All_k8s_worker_nodes_SE","127.0.0.1","TCP","4444","True","","2025-03-07T07:45:56Z"
-"Bashion_SE","127.0.0.1","All_k8s_worker_nodes_SE","127.0.0.1","UDP","8888","False","","2025-03-07T07:45:59Z"
+"Bashion_NE","127.0.0.1","Registery_NE","127.0.0.5","TCP","4444","True","","2025-03-07T14:01:35Z"
+"Bashion_NE","127.0.0.1","Registery_NE","127.0.0.8","TCP","3222","False","nc: connect to 127.0.0.8 port 3222 (tcp) failed: Connection refused","2025-03-07T14:01:36Z"
+"Bashion_NE","127.0.0.1","Registery_NE","127.0.0.4","UDP","3213","False","","2025-03-07T14:01:49Z"
+"Bashion_NE","127.0.0.1","Registery_NE","127.0.0.8","UDP","3211","False","","2025-03-07T14:01:51Z"
 "Bashion_SE","127.0.0.1","All_k8s_worker_nodes_SE","127.0.0.1","ICMP","","False","",""

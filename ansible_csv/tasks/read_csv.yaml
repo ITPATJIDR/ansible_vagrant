@@ -13,6 +13,7 @@
   community.general.read_csv:
     path: "{{ csv_file_path }}"
     delimiter: ","
+    dialect: excel
   register: csv_data
 
 - name: Convert IP string and Port string to lists

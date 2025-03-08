@@ -4,7 +4,7 @@
   connection: local
   gather_facts: false
   vars:
-    csv_file_path: "test10.csv"
+    csv_file_path: "test9.csv"
     connectivity_results: []
   tasks:
     - import_tasks: tasks/read_csv.yaml
@@ -98,7 +98,7 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: Write connectivity results to CSV
+    - name: Create new connectivity results CSV
       ansible.builtin.copy:
         content: |
           "SRC","src_ip","DST","dst_ip","protocol","port","success","error_msg","timestamp"
@@ -106,6 +106,27 @@
           "{{ result.SRC }}","{{ result.src_ip }}","{{ result.DST }}","{{ result.dst_ip }}","{{ result.protocol }}","{{ result.port }}","{{ result.success }}","{{ result.error_msg | default('') | replace('"', '""') }}","{{ result.timestamp | default('') }}"
           {% endfor %}
         dest: "connectivity_results.csv"
+
+    - name: Print detailed connectivity results
+      debug:
+        var: connectivity_results
+        verbosity: 0
+        
+    - name: Print formatted connectivity results
+      debug:
+        msg: |
+          ==========================================
+          DETAILED CONNECTIVITY RESULTS
+          ==========================================
+          {% for result in connectivity_results %}
+          {{ loop.index }}. {{ result.SRC }} ({{ result.src_ip }}) to {{ result.DST }} ({{ result.dst_ip }}) via {{ result.protocol }}{% if result.port %} on port {{ result.port }}{% endif %}
+             Status: {{ 'SUCCESS' if result.success else 'FAILED' }}
+             {% if not result.success %}Error: {{ result.error_msg | default('Unknown error') }}{% endif %}
+             Timestamp: {{ result.timestamp }}
+          {% else %}
+          No connectivity results found.
+          {% endfor %}
+        verbosity: 0
 
     - name: Generate connectivity test summary
       debug:
