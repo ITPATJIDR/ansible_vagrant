@@ -1,0 +1,34 @@
+---
+- name: Debug ICMP server details
+  debug:
+    msg: |
+      Host: {{ inventory_hostname | default('unknown') }}
+      IP: {{ ansible_host | default('unknown') }}
+      Port: {{ ansible_port | default('not set') }}
+      Destination IP: {{ hostvars[inventory_hostname].dst_ip | default('not set') }}
+      Groups: {{ group_names | default([]) }}
+    verbosity: 0
+
+- name: Check if dst_ip is defined
+  ansible.builtin.assert:
+    that:
+      - "dst_ip is defined"
+    fail_msg: "dst_ip is not defined for host {{ inventory_hostname | default('unknown') }}"
+    quiet: true
+
+- name: Ensure ICMP responsiveness on server
+  ansible.builtin.command:
+    cmd: "ping -c 4 {{ dst_ip | default('127.0.0.1') }}"
+  register: ping_test_result
+  failed_when: false
+
+- name: Debug ICMP test results
+  debug:
+    msg: |
+      ICMP Test Results:
+      Source: {{ inventory_hostname | default('unknown') }}
+      Destination: {{ dst_ip | default('unknown') }}
+      Success: {{ (ping_test_result.rc == 0) if ping_test_result is defined else 'unknown' }}
+      Output: {{ ping_test_result.stdout | default('No output') }}
+      Error: {{ ping_test_result.stderr | default('No error') }}
+    verbosity: 1

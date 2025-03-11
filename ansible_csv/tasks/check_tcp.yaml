@@ -1,0 +1,47 @@
+---
+- name: Debug TCP server details
+  debug:
+    msg: |
+      Host: {{ inventory_hostname }}
+      IP: {{ ansible_host }}
+      Port: {{ ansible_port | default('not set') }}
+      TCP Port: {{ hostvars[inventory_hostname].tcp_port | default('not set') }}
+      Groups: {{ group_names }}
+    verbosity: 0
+
+- name: Check if tcp_port is defined
+  ansible.builtin.assert:
+    that:
+      - "tcp_port is defined"
+    fail_msg: "tcp_port is not defined for host {{ inventory_hostname }}"
+    quiet: true
+
+- name: Run nc -lvp on TCP server port
+  ansible.builtin.command:
+    cmd: "nc -lvp {{ tcp_port }}"
+  async: 3600  # Allow the command to run for up to 1 hour
+  poll: 0      # Run in the background without waiting for completion
+  register: nc_result
+  failed_when: false
+
+- name: Check if TCP port is open using netstat
+  ansible.builtin.command:
+    cmd: "netstat -tuln | grep :{{ tcp_port }}"
+  register: netstat_result
+  failed_when: false
+
+- name: Debug raw nc_result output
+  debug:
+    var: nc_result
+
+- name: Debug TCP server setup results
+  debug:
+    msg: |
+      TCP Server Setup Results:
+      Host: {{ inventory_hostname | default('unknown') }}
+      IP: {{ ansible_host | default('unknown') }}
+      TCP Port: {{ tcp_port | default('unknown') }}
+      Command: nc -lvp {{ tcp_port }}
+      Status: {{ 'Success' if nc_result.ansible_job_id is defined else 'Failed' }}
+      Job ID: {{ nc_result.ansible_job_id | default('Not available') }}
+    verbosity: 1

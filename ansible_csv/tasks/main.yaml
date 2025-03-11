@@ -1,0 +1,18 @@
+---
+- name: Import CSV processing playbook
+  import_tasks: read_csv.yaml
+
+- name: Setup Inventory
+  import_tasks: inventory_setup.yaml
+
+- name: Netcat check TCP
+  import_tasks: check_tcp.yaml
+
+- name: Netcat check UDP
+  import_tasks: check_udp.yaml
+
+- name: Netcat check ICMP 
+  import_tasks: check_icmp.yaml
+
+- name: Import client connection playbook
+  import_tasks: connect_client.yaml

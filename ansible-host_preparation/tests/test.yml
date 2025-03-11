@@ -1,0 +1,6 @@
+---
+- hosts: docker_vm
+  remote_user: root
+  roles:
+    - ansible-host_preparation
+  become: yes

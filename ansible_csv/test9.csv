@@ -1,0 +1,5 @@
+#,SRC,ZONE,SRC_Search_Key,Use Interface,SRC_IP,DST,ZONE,DST_Search_Key,Use Interface,DST_IP,TCP,UDP,ICMP,Objective,Remark
+Management and Operation,,,,,,,,,,,,,,,
+System to system,,,,,,,,,,,,,,,
+ne-to-ne,,,,,,,,,,,,,,,
+,Bashion,SE,Bashion_SE,mgmt_ip,172.178.23.77,All_k8s_worker_nodes,SE,All_k8s_worker_nodes_SE,svc_ip,172.174.22.169,4444,8888,TRUE,,

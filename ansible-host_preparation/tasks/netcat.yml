@@ -1,0 +1,22 @@
+---
+  - block: 
+    - name: Install netcat
+      apt:
+        name: netcat
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Start netcat on port 4444
+      shell: "nohup nc -lvkp 4444 > /dev/null 2>&1 &"
+      async: 10
+      poll: 0
+      ignore_errors: yes
+
+    - name: Verify netcat is listening
+      shell: "netstat -tulnp | grep ':4444'"
+      register: netcat_status
+      changed_when: false
+
+    - name: Print netcat status
+      debug:
+        msg: "{{ netcat_status.stdout }}"

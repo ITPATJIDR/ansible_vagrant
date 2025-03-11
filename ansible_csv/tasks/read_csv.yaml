@@ -1,0 +1,34 @@
+---
+- name: Check if CSV file exists
+  stat:
+    path: "{{ csv_file_path }}"
+  register: csv_file_stat
+
+- name: Fail if CSV file doesn't exist
+  fail:
+    msg: "CSV file not found at {{ csv_file_path }}"
+  when: not csv_file_stat.stat.exists
+
+- name: Read CSV file
+  community.general.read_csv:
+    path: "{{ csv_file_path }}"
+    delimiter: ","
+    dialect: excel
+  register: csv_data
+
+- name: Convert IP string and Port string to lists
+  set_fact:
+    processed_data: "{{ processed_data | default([]) + 
+      [item | combine({
+        'dst_ip': (item['DST_IP'] | default('')).split(',') | map('trim') | list,
+        'src_ip': (item['SRC_IP'] | default('')).split(',') | map('trim') | list,
+        'TCP':    (item['TCP'] | default('')).split(',') | map('trim') | list,
+        'UDP':    (item['UDP'] | default('')).split(',') | map('trim') | list,
+        'ICMP':    (item['ICMP'] | default('')).split(',') | map('trim') | list,
+      })] }}"
+  loop: "{{ csv_data.list }}"
+  when: item['DST_IP'] != '' or item['SRC_IP'] != '' 
+
+- name: debug Processed_data
+  debug:
+    msg: "{{ processed_data }}"

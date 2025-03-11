@@ -1,0 +1,174 @@
+---
+- name: Setup inventory and data
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    csv_file_path: "test9.csv"
+    connectivity_results: []
+  tasks:
+    - import_tasks: tasks/read_csv.yaml
+    - import_tasks: tasks/inventory_setup.yaml
+
+- name: Configure TCP servers
+  hosts: "*_TCP"
+  gather_facts: no
+  tasks:
+    - import_tasks: tasks/check_tcp.yaml
+
+- name: Configure UDP servers
+  hosts: "*_UDP"
+  gather_facts: no
+  tasks:
+    - import_tasks: tasks/check_udp.yaml
+
+- name: Test clients TCP
+  hosts: "*_client_*"
+  gather_facts: yes
+  vars:
+    is_tcp_client: "{{ inventory_hostname in (groups | dict2items | selectattr('key', 'match', '.*_TCP$') | map(attribute='value') | flatten) }}"
+  tasks:
+    - import_tasks: tasks/connect_client.yaml
+      when: is_tcp_client | bool
+    - name: Store TCP connectivity result
+      set_fact:
+        connectivity_results: "{{ (hostvars['localhost']['connectivity_results'] | default([])) + [{
+          'SRC': src_name, 
+          'src_ip': ansible_host, 
+          'DST': dst_name, 
+          'dst_ip': dst_ip, 
+          'protocol': 'TCP', 
+          'port': tcp_port | default(''), 
+          'success': (nc_result.rc == 0) if nc_result is defined else false,
+          'error_msg': (nc_result.stderr | default('') if nc_result.rc != 0 else '') if nc_result is defined else 'Test not executed',
+          'timestamp': ansible_date_time.iso8601 | default('')
+        }] }}"
+      delegate_facts: true
+      delegate_to: localhost
+      when: is_tcp_client | bool
+
+- name: Test clients UDP
+  hosts: "*_client_*"
+  gather_facts: yes
+  vars:
+    is_udp_client: "{{ inventory_hostname in (groups | dict2items | selectattr('key', 'match', '.*_UDP$') | map(attribute='value') | flatten) }}"
+  tasks:
+    - import_tasks: tasks/connect_client_UDP.yaml
+      when: is_udp_client | bool
+    - name: Store UDP connectivity result
+      set_fact:
+        connectivity_results: "{{ (hostvars['localhost']['connectivity_results'] | default([])) + [{
+          'SRC': src_name, 
+          'src_ip': ansible_host, 
+          'DST': dst_name, 
+          'dst_ip': dst_ip, 
+          'protocol': 'UDP', 
+          'port': udp_port | default(''), 
+          'success': (nc_result.rc == 0) if nc_result is defined else false,
+          'error_msg': (nc_result.stderr | default('') if nc_result.rc != 0 else '') if nc_result is defined else 'Test not executed',
+          'timestamp': ansible_date_time.iso8601 | default('')
+        }] }}"
+      delegate_facts: true
+      delegate_to: localhost
+      when: is_udp_client | bool
+
+- name: Configure ICMP servers
+  hosts: "*_ICMP"
+  gather_facts: no
+  tasks:
+    - import_tasks: tasks/check_icmp.yaml
+    - name: Store ICMP connectivity result
+      set_fact:
+        connectivity_results: "{{ (hostvars['localhost']['connectivity_results'] | default([])) + [{
+          'SRC': src_name, 
+          'src_ip': ansible_host, 
+          'DST': dst_name, 
+          'dst_ip': dst_ip, 
+          'protocol': 'ICMP', 
+          'port': '', 
+          'success': (ping_test_result.rc == 0) if ping_test_result is defined else false,
+          'error_msg': (ping_test_result.stderr | default('') if ping_test_result.rc != 0 else '') if ping_test_result is defined else 'Test not executed',
+          'timestamp': ansible_date_time.iso8601 | default('')
+        }] }}"
+      delegate_facts: true
+      delegate_to: localhost
+
+- name: Save results to CSV
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Create new connectivity results CSV
+      ansible.builtin.copy:
+        content: |
+          "SRC","src_ip","DST","dst_ip","protocol","port","success","error_msg","timestamp"
+          {% for result in connectivity_results %}
+          "{{ result.SRC }}","{{ result.src_ip }}","{{ result.DST }}","{{ result.dst_ip }}","{{ result.protocol }}","{{ result.port }}","{{ result.success }}","{{ result.error_msg | default('') | replace('"', '""') }}","{{ result.timestamp | default('') }}"
+          {% endfor %}
+        dest: "connectivity_results.csv"
+
+    - name: Print detailed connectivity results
+      debug:
+        var: connectivity_results
+        verbosity: 0
+        
+    - name: Print formatted connectivity results
+      debug:
+        msg: |
+          ==========================================
+          DETAILED CONNECTIVITY RESULTS
+          ==========================================
+          {% for result in connectivity_results %}
+          {{ loop.index }}. {{ result.SRC }} ({{ result.src_ip }}) to {{ result.DST }} ({{ result.dst_ip }}) via {{ result.protocol }}{% if result.port %} on port {{ result.port }}{% endif %}
+             Status: {{ 'SUCCESS' if result.success else 'FAILED' }}
+             {% if not result.success %}Error: {{ result.error_msg | default('Unknown error') }}{% endif %}
+             Timestamp: {{ result.timestamp }}
+          {% else %}
+          No connectivity results found.
+          {% endfor %}
+        verbosity: 0
+
+    - name: Generate connectivity test summary
+      debug:
+        msg: |
+          ==========================================
+          CONNECTIVITY TEST SUMMARY
+          ==========================================
+          Total Tests: {{ connectivity_results | length }}
+          Successful Tests: {{ connectivity_results | selectattr('success', 'equalto', true) | list | length }}
+          Failed Tests: {{ connectivity_results | selectattr('success', 'equalto', false) | list | length }}
+          
+          FAILED CONNECTIONS:
+          {% for result in connectivity_results if not result.success %}
+          - {{ result.SRC }} ({{ result.src_ip }}) to {{ result.DST }} ({{ result.dst_ip }}) via {{ result.protocol }}{% if result.port %} on port {{ result.port }}{% endif %}
+            Error: {{ result.error_msg | default('Unknown error') }}
+          {% else %}
+          No failed connections.
+          {% endfor %}
+          
+          SUCCESSFUL CONNECTIONS:
+          {% for result in connectivity_results if result.success %}
+          - {{ result.SRC }} ({{ result.src_ip }}) to {{ result.DST }} ({{ result.dst_ip }}) via {{ result.protocol }}{% if result.port %} on port {{ result.port }}{% endif %}
+          {% else %}
+          No successful connections.
+          {% endfor %}
+        verbosity: 0
+
+# TODO
+# 1 protocol layer 4 and layer 7
+# test layer 4 and layer 7
+# check / /http /https 
+
+# Done
+# ICMP TESTING่่ ( ping command )
+# source ip specify ว่ามาจาก ไหน
+# fix hard code to variable 
+# fix output to easy to read 
+
+# friday 
+
+
+# step
+# read_csv -> set inventory -> Server netcat listen -> Client -> TCP
+                                                            # -> UDP
+                                                            # -> ICMP

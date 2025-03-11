@@ -1,0 +1,72 @@
+---
+- name: Filter for TCP clients only
+  ansible.builtin.set_fact:
+    is_client: "{{ 'client' in inventory_hostname }}"
+  when: "'dst_ip' in hostvars[inventory_hostname]"
+
+- name: Debug TCP client details
+  debug:
+    msg: |
+      Client Host: {{ inventory_hostname }}
+      Source IP: {{ ansible_host }}
+      Destination IP: {{ dst_ip }}
+      TCP Port: {{ tcp_port | default('not set') }}
+      Groups: {{ group_names }}
+  when: is_client | bool
+
+- name: Check if dst_ip is defined
+  ansible.builtin.assert:
+    that:
+      - "dst_ip is defined"
+    fail_msg: "dst_ip is not defined for host {{ inventory_hostname }}"
+    quiet: true
+  when: is_client | bool
+
+- name: Skip if tcp_port is not defined
+  set_fact:
+    skip_tcp_test: "{{ tcp_port is not defined }}"
+  when: is_client | bool
+
+- name: Run nc -z to test connectivity to dst_ip on tcp_port
+  ansible.builtin.command:
+    cmd: "nc -z -v {{ dst_ip }} {{ tcp_port }}"
+  register: nc_result
+  failed_when: false  
+  when: is_client | bool and not (skip_tcp_test | default(false))
+
+- name: Set test timestamp
+  ansible.builtin.set_fact:
+    test_timestamp: "{{ ansible_date_time.iso8601 | default('') }}"
+  when: is_client | bool
+
+- name: Display nc -z result
+  debug:
+    msg: |
+      TCP Connectivity test from {{ inventory_hostname }} to {{ dst_ip }}:{{ tcp_port }}:
+      Status: {{ 'Success' if nc_result.rc == 0 else 'Failed' }}
+      Exit Code: {{ nc_result.rc }}
+      Source: {{ src_name | default(inventory_hostname) }} ({{ ansible_host }})
+      Destination: {{ dst_name | default('unknown') }} ({{ dst_ip }})
+      Port: {{ tcp_port }}
+      Command: nc -z -v {{ dst_ip }} {{ tcp_port }}
+      Timestamp: {{ test_timestamp }}
+      Output: {{ nc_result.stdout_lines | default(['No output']) | to_nice_json }}
+      Error (if any): {{ nc_result.stderr_lines | default(['No error']) | to_nice_json }}
+    verbosity: 0
+  when: is_client | bool and not (skip_tcp_test | default(false))
+
+- name: Store TCP connectivity result
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    connectivity_results: "{{ connectivity_results | default([]) + [{
+      'SRC': src_name | default(inventory_hostname | regex_replace('_client_.*', '')),
+      'src_ip': ansible_host,
+      'DST': dst_name | default('unknown'),
+      'dst_ip': dst_ip,
+      'protocol': 'TCP',
+      'port': tcp_port | default(''),
+      'success': nc_result.rc == 0,
+      'error_msg': nc_result.stderr | default(''),
+      'timestamp': test_timestamp
+    }] }}"
+  when: is_client | bool and not (skip_tcp_test | default(false))

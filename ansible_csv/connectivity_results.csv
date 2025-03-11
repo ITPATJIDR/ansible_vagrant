@@ -1,0 +1,4 @@
+"SRC","src_ip","DST","dst_ip","protocol","port","success","error_msg","timestamp"
+"Bashion_SE","172.178.23.77","All_k8s_worker_nodes_SE","172.174.22.169","TCP","4444","False","nc: connect to 172.174.22.169 port 4444 (tcp) failed: Connection timed out","2025-03-11T12:09:03Z"
+"Bashion_SE","172.178.23.77","All_k8s_worker_nodes_SE","172.174.22.169","UDP","8888","True","","2025-03-11T12:12:14Z"
+"Bashion_SE","172.178.23.77","All_k8s_worker_nodes_SE","172.174.22.169","ICMP","","False","","2025-03-11T12:12:14Z"
