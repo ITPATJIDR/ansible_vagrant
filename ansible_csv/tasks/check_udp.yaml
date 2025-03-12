@@ -19,8 +19,8 @@
 - name: Run nc -ulvp on UDP server port
   ansible.builtin.command:
     cmd: "nc -ulvp {{ udp_port }} "
-  async: 3600  # Allow the command to run for up to 1 hour
-  poll: 0      # Run in the background without waiting for completion
+  async: 3600  
+  poll: 0      
   register: nc_result
   failed_when: false
 
